@@ -5,6 +5,8 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const partnerRoutes = require("./routes/partnersRoutes");
+const serviceRoutes = require("./routes/servicesRoutes");
+const teamRoutes = require("./routes/teamRoutes");
 
 const app = express();
 app.use(express.json());
@@ -17,6 +19,8 @@ connectDB();
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/partners", partnerRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/team", teamRoutes);
 
 // Start server
 const PORT = process.env.PORT || 4000;
