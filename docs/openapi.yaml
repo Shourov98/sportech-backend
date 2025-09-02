@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Admin & Partners API
+  title: Admin, Partners & Services API
   version: 1.0.0
-  description: API for admin authentication and management, and partners CRUD.
+  description: API for admin authentication and management, partners CRUD, and services CRUD.
 servers:
   - url: /api
 paths:
@@ -282,6 +282,118 @@ paths:
                 $ref: "#/components/schemas/GenericMessage"
         "404":
           description: Not found
+  /services:
+    get:
+      tags:
+        - Services
+      summary: List services
+      parameters:
+        - in: query
+          name: published
+          schema:
+            type: boolean
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+    post:
+      tags:
+        - Services
+      summary: Create a new service
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceRequest"
+      responses:
+        "201":
+          description: Service created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+        "400":
+          description: Bad request
+  /services/{id}:
+    get:
+      tags:
+        - Services
+      summary: Get a service by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+        "404":
+          description: Not found
+    put:
+      tags:
+        - Services
+      summary: Update a service
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceRequest"
+      responses:
+        "200":
+          description: Service updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+        "404":
+          description: Not found
+    delete:
+      tags:
+        - Services
+      summary: Delete a service
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+        "404":
+          description: Not found
 components:
   securitySchemes:
     cookieAuth:
@@ -425,6 +537,54 @@ components:
         appGallery:
           type: string
         logo:
+          type: string
+        slug:
+          type: string
+        published:
+          type: boolean
+        order:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ServiceRequest:
+      type: object
+      description: Service fields for create/update operations
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        subtitle:
+          type: string
+        short_description:
+          type: string
+        description:
+          type: string
+        banner_image:
+          type: string
+        right_image:
+          type: string
+    Service:
+      type: object
+      description: Service document from the database
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        subtitle:
+          type: string
+        shortDesc:
+          type: string
+        description:
+          type: string
+        bannerImage:
+          type: string
+        rightImage:
           type: string
         slug:
           type: string
