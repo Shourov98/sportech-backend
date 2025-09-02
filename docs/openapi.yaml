@@ -1,19 +1,23 @@
 openapi: 3.0.3
 info:
-  title: Admin Auth API
+  title: Admin & Partners API
   version: 1.0.0
-  description: API for admin authentication and management
+  description: API for admin authentication and management, and partners CRUD.
 servers:
-  - url: /api/auth
+  - url: /api
 paths:
-  /health:
+  /auth/health:
     get:
+      tags:
+        - Auth
       summary: Health check
       responses:
         "200":
           description: OK
-  /seed-admin:
+  /auth/seed-admin:
     post:
+      tags:
+        - Auth
       summary: Seed initial admin user
       requestBody:
         required: true
@@ -32,8 +36,10 @@ paths:
           description: Invalid seed request
         "409":
           description: Admin already exists
-  /login:
+  /auth/login:
     post:
+      tags:
+        - Auth
       summary: Admin login
       requestBody:
         required: true
@@ -50,8 +56,10 @@ paths:
                 $ref: "#/components/schemas/LoginResponse"
         "401":
           description: Invalid credentials
-  /logout:
+  /auth/logout:
     post:
+      tags:
+        - Auth
       summary: Admin logout
       responses:
         "200":
@@ -60,8 +68,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GenericMessage"
-  /forgot-password:
+  /auth/forgot-password:
     post:
+      tags:
+        - Auth
       summary: Request password reset OTP
       requestBody:
         required: true
@@ -76,8 +86,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GenericMessage"
-  /verify-otp:
+  /auth/verify-otp:
     post:
+      tags:
+        - Auth
       summary: Verify password reset OTP
       requestBody:
         required: true
@@ -97,8 +109,10 @@ paths:
                     type: string
         "400":
           description: Invalid or expired OTP
-  /reset-password:
+  /auth/reset-password:
     post:
+      tags:
+        - Auth
       summary: Reset password with reset token
       requestBody:
         required: true
@@ -115,8 +129,10 @@ paths:
                 $ref: "#/components/schemas/GenericMessage"
         "400":
           description: Invalid reset session
-  /change-password:
+  /auth/change-password:
     post:
+      tags:
+        - Auth
       summary: Change current admin password
       security:
         - cookieAuth: []
@@ -135,8 +151,10 @@ paths:
                 $ref: "#/components/schemas/GenericMessage"
         "401":
           description: Incorrect current password
-  /me:
+  /auth/me:
     get:
+      tags:
+        - Auth
       summary: Get current admin profile
       security:
         - cookieAuth: []
@@ -152,6 +170,118 @@ paths:
                     $ref: "#/components/schemas/Admin"
         "401":
           description: Unauthorized
+  /partners:
+    get:
+      tags:
+        - Partners
+      summary: List partners
+      parameters:
+        - in: query
+          name: published
+          schema:
+            type: boolean
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of partners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Partner"
+    post:
+      tags:
+        - Partners
+      summary: Create a new partner
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartnerRequest"
+      responses:
+        "201":
+          description: Partner created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Partner"
+        "400":
+          description: Bad request
+  /partners/{id}:
+    get:
+      tags:
+        - Partners
+      summary: Get a partner by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Partner found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Partner"
+        "404":
+          description: Not found
+    put:
+      tags:
+        - Partners
+      summary: Update a partner
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartnerRequest"
+      responses:
+        "200":
+          description: Partner updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Partner"
+        "404":
+          description: Not found
+    delete:
+      tags:
+        - Partners
+      summary: Delete a partner
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Partner deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+        "404":
+          description: Not found
 components:
   securitySchemes:
     cookieAuth:
@@ -256,3 +386,55 @@ components:
           format: password
         seedSecret:
           type: string
+    PartnerRequest:
+      type: object
+      description: Partner fields for create/update operations
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        short_description:
+          type: string
+        description:
+          type: string
+        website:
+          type: string
+        googleplay:
+          type: string
+        appgallery:
+          type: string
+        logo:
+          type: string
+    Partner:
+      type: object
+      description: Partner document from the database
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        shortDesc:
+          type: string
+        description:
+          type: string
+        website:
+          type: string
+        googlePlay:
+          type: string
+        appGallery:
+          type: string
+        logo:
+          type: string
+        slug:
+          type: string
+        published:
+          type: boolean
+        order:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
