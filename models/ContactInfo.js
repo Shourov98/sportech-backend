@@ -3,7 +3,6 @@ const mongoose5 = require("mongoose");
 // Singleton document with numeric _id = 1
 const ContactInfoSchema = new mongoose5.Schema(
   {
-    _id: { type: Number, default: 1 },
     address: String,
     email: String,
     phone: String,
