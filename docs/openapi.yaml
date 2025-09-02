@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Admin, Partners & Services API
+  title: Admin, Partners, Services & FAQs API
   version: 1.0.0
-  description: API for admin authentication and management, partners CRUD, and services CRUD.
+  description: API for admin authentication and management, partners CRUD, services CRUD, and FAQs CRUD.
 servers:
   - url: /api
 paths:
@@ -394,6 +394,90 @@ paths:
                 $ref: "#/components/schemas/GenericMessage"
         "404":
           description: Not found
+  /faqs:
+    get:
+      tags:
+        - FAQs
+      summary: List FAQs
+      responses:
+        "200":
+          description: A list of FAQs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Faq"
+    post:
+      tags:
+        - FAQs
+      summary: Create a new FAQ
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FaqRequest"
+      responses:
+        "201":
+          description: FAQ created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faq"
+        "400":
+          description: Bad request
+  /faqs/{id}:
+    put:
+      tags:
+        - FAQs
+      summary: Update an FAQ
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FaqRequest"
+      responses:
+        "200":
+          description: FAQ updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faq"
+        "404":
+          description: Not found
+    delete:
+      tags:
+        - FAQs
+      summary: Delete an FAQ
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: FAQ deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+        "404":
+          description: Not found
 components:
   securitySchemes:
     cookieAuth:
@@ -590,6 +674,35 @@ components:
           type: string
         published:
           type: boolean
+        order:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    FaqRequest:
+      type: object
+      description: FAQ fields for create/update operations
+      required:
+        - question
+        - answer
+      properties:
+        question:
+          type: string
+        answer:
+          type: string
+    Faq:
+      type: object
+      description: FAQ document from the database
+      properties:
+        _id:
+          type: string
+        question:
+          type: string
+        answer:
+          type: string
         order:
           type: number
         createdAt:
