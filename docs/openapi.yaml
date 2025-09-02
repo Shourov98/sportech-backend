@@ -1,0 +1,258 @@
+openapi: 3.0.3
+info:
+  title: Admin Auth API
+  version: 1.0.0
+  description: API for admin authentication and management
+servers:
+  - url: /api/auth
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /seed-admin:
+    post:
+      summary: Seed initial admin user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeedAdminRequest"
+      responses:
+        "201":
+          description: Admin created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Admin"
+        "400":
+          description: Invalid seed request
+        "409":
+          description: Admin already exists
+  /login:
+    post:
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+  /logout:
+    post:
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+  /forgot-password:
+    post:
+      summary: Request password reset OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        "200":
+          description: If email exists, OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+  /verify-otp:
+    post:
+      summary: Verify password reset OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpRequest"
+      responses:
+        "200":
+          description: OTP verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resetToken:
+                    type: string
+        "400":
+          description: Invalid or expired OTP
+  /reset-password:
+    post:
+      summary: Reset password with reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+        "400":
+          description: Invalid reset session
+  /change-password:
+    post:
+      summary: Change current admin password
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+        "401":
+          description: Incorrect current password
+  /me:
+    get:
+      summary: Get current admin profile
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  admin:
+                    $ref: "#/components/schemas/Admin"
+        "401":
+          description: Unauthorized
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+  schemas:
+    Admin:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    GenericMessage:
+      type: object
+      properties:
+        message:
+          type: string
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    LoginResponse:
+      type: object
+      properties:
+        admin:
+          $ref: "#/components/schemas/Admin"
+        token:
+          type: string
+          description: JWT (also set in httpOnly cookie)
+    ForgotPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+    VerifyOtpRequest:
+      type: object
+      required:
+        - email
+        - otp
+      properties:
+        email:
+          type: string
+          format: email
+        otp:
+          type: string
+          description: 4-digit code
+    ResetPasswordRequest:
+      type: object
+      required:
+        - email
+        - resetToken
+        - newPassword
+      properties:
+        email:
+          type: string
+          format: email
+        resetToken:
+          type: string
+        newPassword:
+          type: string
+          format: password
+    ChangePasswordRequest:
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+    SeedAdminRequest:
+      type: object
+      required:
+        - email
+        - password
+        - seedSecret
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        seedSecret:
+          type: string
