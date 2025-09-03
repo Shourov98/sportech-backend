@@ -8,6 +8,8 @@ const partnerRoutes = require("./routes/partnersRoutes");
 const serviceRoutes = require("./routes/servicesRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const faqRoutes = require("./routes/faqsRoutes");
+const contactRoutes = require("./routes/contactRoutes");
+const policyRoutes = require("./routes/policiesRoutes");
 
 const app = express();
 app.use(express.json());
@@ -23,6 +25,8 @@ app.use("/api/partners", partnerRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/team", teamRoutes);
 app.use("/api/faqs", faqRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/policies", policyRoutes);
 
 // Start server
 const PORT = process.env.PORT || 4000;

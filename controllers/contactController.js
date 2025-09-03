@@ -1,3 +1,4 @@
+// controllers/contactController.js
 const ContactInfo = require("../models/ContactInfo");
 
 exports.get = async (req, res) => {
@@ -13,6 +14,7 @@ exports.update = async (req, res) => {
     new: true,
     upsert: true,
     setDefaultsOnInsert: true,
+    runValidators: true, // optional but recommended if you add validators later
   });
   res.json(updated);
 };

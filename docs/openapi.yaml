@@ -478,6 +478,148 @@ paths:
                 $ref: "#/components/schemas/GenericMessage"
         "404":
           description: Not found
+  /contact:
+    post:
+      tags:
+        - Contact
+      summary: Submit a contact message
+      description: Allows users to submit a contact form message.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactRequest"
+      responses:
+        "201":
+          description: Contact message submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+    get:
+      tags:
+        - Contact
+      summary: List all contact messages
+      description: Retrieve all contact messages submitted by users.
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: A list of contact messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contact"
+
+  /contact/{id}:
+    delete:
+      tags:
+        - Contact
+      summary: Delete a contact message
+      description: Remove a contact message by its ID.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contact message deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+
+  /policies:
+    get:
+      tags:
+        - Policies
+      summary: List all policies
+      description: Retrieve a list of all policy documents.
+      responses:
+        "200":
+          description: A list of policies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Policy"
+    post:
+      tags:
+        - Policies
+      summary: Create a new policy
+      description: Add a new policy document.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRequest"
+      responses:
+        "201":
+          description: Policy created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+
+  /policies/{id}:
+    put:
+      tags:
+        - Policies
+      summary: Update a policy
+      description: Update an existing policy by its ID.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRequest"
+      responses:
+        "200":
+          description: Policy updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+    delete:
+      tags:
+        - Policies
+      summary: Delete a policy
+      description: Remove a policy by its ID.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Policy deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+
 components:
   securitySchemes:
     cookieAuth:
@@ -705,6 +847,66 @@ components:
           type: string
         order:
           type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ContactRequest:
+      type: object
+      description: Contact fields for create operation
+      required:
+        - name
+        - email
+        - message
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        message:
+          type: string
+    Contact:
+      type: object
+      description: Contact document from the database
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PolicyRequest:
+      type: object
+      description: Policy fields for create/update operations
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+    Policy:
+      type: object
+      description: Policy document from the database
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
         createdAt:
           type: string
           format: date-time
