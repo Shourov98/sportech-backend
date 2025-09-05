@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Admin, Partners, Services & FAQs API
+  title: Sportech Admin, Partners, Services, Team & Contact API
   version: 1.0.0
-  description: API for admin authentication and management, partners CRUD, services CRUD, and FAQs CRUD.
+  description: API for admin authentication and management, partners CRUD, services CRUD, team management, and contact form handling.
 servers:
   - url: /api
 paths:
@@ -479,83 +479,197 @@ paths:
         "404":
           description: Not found
   /contact:
+    get:
+      tags:
+        - Contact
+      summary: Get contact information
+      description: Retrieve the contact information (publicly accessible).
+      responses:
+        "200":
+          description: Contact information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactInfo"
     post:
       tags:
         - Contact
-      summary: Submit a contact message
-      description: Allows users to submit a contact form message.
+      summary: Create contact information (Admin only)
+      description: Create the initial contact information. Can only be done once.
+      security:
+        - cookieAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ContactRequest"
+              $ref: "#/components/schemas/ContactInfoRequest"
       responses:
         "201":
-          description: Contact message submitted successfully
+          description: Contact information created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GenericMessage"
-    get:
+                $ref: "#/components/schemas/ContactInfo"
+        "409":
+          description: Contact information already exists
+    put:
       tags:
         - Contact
-      summary: List all contact messages
-      description: Retrieve all contact messages submitted by users.
+      summary: Update contact information (Admin only)
+      description: Update the existing contact information.
       security:
         - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactInfoRequest"
       responses:
         "200":
-          description: A list of contact messages
+          description: Contact information updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactInfo"
+        "400":
+          description: Invalid input
+
+  /contact/send-message:
+    post:
+      tags:
+        - Contact
+      summary: Send a contact message
+      description: Allows users to send a message through the contact form.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactMessageRequest"
+      responses:
+        "200":
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Message sent successfully!"
+        "400":
+          description: Missing required fields (name, email, message)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "name, email, and message are required"
+        "500":
+          description: Failed to send message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to send message"
+
+  /team:
+    get:
+      tags:
+        - Team
+      summary: List all team members
+      responses:
+        "200":
+          description: A list of team members
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Contact"
-
-  /contact/{id}:
+                  $ref: "#/components/schemas/TeamMember"
+    post:
+      tags:
+        - Team
+      summary: Add a new team member (admin only)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamMemberRequest"
+      responses:
+        "201":
+          description: Team member created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamMember"
+        "400":
+          description: Invalid input
+          
+  /team/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: Team member ID
+    put:
+      tags:
+        - Team
+      summary: Update a team member (admin only)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamMemberRequest"
+      responses:
+        "200":
+          description: Team member updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamMember"
+        "400":
+          description: Invalid input
+        "404":
+          description: Team member not found
     delete:
       tags:
-        - Contact
-      summary: Delete a contact message
-      description: Remove a contact message by its ID.
+        - Team
+      summary: Remove a team member (admin only)
       security:
         - cookieAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
       responses:
         "200":
-          description: Contact message deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GenericMessage"
+          description: Team member removed
+        "404":
+          description: Team member not found
+
+  # Note: The delete endpoint has been removed as per the current implementation
 
   /policies:
-    get:
-      tags:
-        - Policies
-      summary: List all policies
-      description: Retrieve a list of all policy documents.
-      responses:
-        "200":
-          description: A list of policies
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Policy"
     post:
       tags:
         - Policies
       summary: Create a new policy
-      description: Add a new policy document.
+      description: Create a new policy document. Requires admin authentication.
       security:
         - cookieAuth: []
       requestBody:
@@ -571,13 +685,114 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Policy"
-
-  /policies/{id}:
-    put:
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Policy with this slug already exists
+          
+  /policies/bulk:
+    post:
       tags:
         - Policies
-      summary: Update a policy
-      description: Update an existing policy by its ID.
+      summary: Create multiple policies
+      description: Create multiple policy documents at once. Requires admin authentication.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/PolicyRequest"
+      responses:
+        "201":
+          description: Policies created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: Number of policies created
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Policy"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: One or more policies with these slugs already exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Some slugs already exist"
+                  duplicates:
+                    type: array
+                    items:
+                      type: string
+                    example: ["privacy-policy", "terms"]
+
+  /feedback:
+    get:
+      tags:
+        - Feedback
+      summary: List all feedback items
+      description: Returns a list of all feedback items, sorted by order and creation date
+      responses:
+        "200":
+          description: A list of feedback items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Feedback"
+    post:
+      tags:
+        - Feedback
+      summary: Submit new feedback
+      description: Allows users to submit new feedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackCreateRequest"
+      responses:
+        "201":
+          description: Feedback submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feedback"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /feedback/{id}:
+    put:
+      tags:
+        - Feedback
+      summary: Update feedback (Admin only)
+      description: Update an existing feedback item. Requires admin authentication.
       security:
         - cookieAuth: []
       parameters:
@@ -586,6 +801,68 @@ paths:
           required: true
           schema:
             type: string
+          description: Feedback ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackUpdateRequest"
+      responses:
+        "200":
+          description: Feedback updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feedback"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Feedback not found
+
+  /policies/{slug}:
+    get:
+      tags:
+        - Policies
+      summary: Get a policy by slug
+      description: Retrieve a policy document by its slug (public endpoint).
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+          description: The slug of the policy to retrieve (e.g., 'privacy-policy')
+      responses:
+        "200":
+          description: Policy retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+        "404":
+          description: Policy not found
+          
+    put:
+      tags:
+        - Policies
+      summary: Update a policy by slug
+      description: Update an existing policy by its slug. Creates the policy if it doesn't exist (upsert). Requires admin authentication.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+          description: The slug of the policy to update (e.g., 'privacy-policy')
       requestBody:
         required: true
         content:
@@ -594,11 +871,19 @@ paths:
               $ref: "#/components/schemas/PolicyRequest"
       responses:
         "200":
-          description: Policy updated successfully
+          description: Policy updated/created successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Policy"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Policy with this slug already exists
     delete:
       tags:
         - Policies
@@ -627,6 +912,93 @@ components:
       in: cookie
       name: token
   schemas:
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          minLength: 1
+          example: "John Doe"
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        avatar:
+          type: string
+          format: uri
+          example: "https://example.com/avatar.jpg"
+        message:
+          type: string
+          minLength: 1
+          example: "Great service! Very satisfied with the support."
+        order:
+          type: integer
+          readOnly: true
+          description: "Used for sorting feedback items"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - name
+        - stars
+        - message
+
+    FeedbackCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          example: "John Doe"
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        avatar:
+          type: string
+          format: uri
+          example: "https://example.com/avatar.jpg"
+        message:
+          type: string
+          minLength: 1
+          example: "Great service! Very satisfied with the support."
+      required:
+        - name
+        - stars
+        - message
+
+    FeedbackUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          example: "John Doe"
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        avatar:
+          type: string
+          format: uri
+          example: "https://example.com/avatar.jpg"
+        message:
+          type: string
+          minLength: 1
+          example: "Great service! Very satisfied with the support."
+
     Admin:
       type: object
       properties:
@@ -853,6 +1225,76 @@ components:
         updatedAt:
           type: string
           format: date-time
+    ContactMessageRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - message
+      properties:
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        phone:
+          type: string
+          example: "+1234567890"
+        message:
+          type: string
+          example: "I would like to inquire about your services."
+
+    TeamMember:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          example: "John Doe"
+        role:
+          type: string
+          example: "Software Engineer"
+        photo:
+          type: string
+          format: uri
+          example: "https://example.com/photos/john.jpg"
+        order:
+          type: integer
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    TeamMemberRequest:
+      type: object
+      required:
+        - name
+        - role
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        role:
+          type: string
+          example: "Software Engineer"
+        photo:
+          type: string
+          format: uri
+          example: "https://example.com/photos/john.jpg"
+
     ContactRequest:
       type: object
       description: Contact fields for create operation
@@ -886,17 +1328,174 @@ components:
         updatedAt:
           type: string
           format: date-time
+    PolicySection:
+      type: object
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+          description: Title of the section
+          example: "Information We Collect"
+        description:
+          type: array
+          items:
+            type: string
+          description: Array of paragraphs in this section
+          example:
+            - "We collect information that you provide directly to us when you use our services."
+            - "This may include your name, email address, and other contact information."
+
     PolicyRequest:
       type: object
       description: Policy fields for create/update operations
       required:
+        - slug
         - title
-        - content
+        - sections
       properties:
+        slug:
+          type: string
+          description: URL-friendly identifier (lowercase, hyphen-separated)
+          example: "privacy-policy"
         title:
           type: string
-        content:
+          description: Title of the policy
+          example: "Privacy Policy"
+        subtitle:
           type: string
+          description: Optional subtitle for the policy
+          example: "Last updated on January 1, 2023"
+        sections:
+          type: array
+          description: Array of policy sections
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PolicySection"
+
+    Policy:
+      type: object
+      description: Policy document from the database
+      properties:
+        _id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          description: URL-friendly identifier (lowercase, hyphen-separated)
+          example: "privacy-policy"
+        title:
+          type: string
+          description: Title of the policy
+          example: "Privacy Policy"
+        subtitle:
+          type: string
+          description: Optional subtitle for the policy
+          example: "Last updated on January 1, 2023"
+        sections:
+          type: array
+          description: Array of policy sections
+          items:
+            $ref: "#/components/schemas/PolicySection"
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+    ContactInfo:
+      type: object
+      description: Contact information for the organization
+      properties:
+        _id:
+          type: number
+          example: 1
+          readOnly: true
+        location:
+          type: string
+          description: Physical address or location
+          example: "123 Sports St, City, Country"
+        email:
+          type: string
+          format: email
+          example: "info@sportech.com"
+        phone:
+          type: string
+          example: "+1234567890"
+        facebook:
+          type: string
+          format: uri
+          example: "https://facebook.com/sportech"
+        tiktok:
+          type: string
+          format: uri
+          example: "https://tiktok.com/@sportech"
+        instagram:
+          type: string
+          format: uri
+          example: "https://instagram.com/sportech"
+        youtube:
+          type: string
+          format: uri
+          example: "https://youtube.com/sportech"
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    ContactInfoRequest:
+      type: object
+      description: Schema for creating or updating contact information
+      properties:
+        location:
+          type: string
+          description: Physical address or location
+          example: "123 Sports St, City, Country"
+        email:
+          type: string
+          format: email
+          example: "info@sportech.com"
+        phone:
+          type: string
+          example: "+1234567890"
+        facebook:
+          type: string
+          format: uri
+          example: "https://facebook.com/sportech"
+        tiktok:
+          type: string
+          format: uri
+          example: "https://tiktok.com/@sportech"
+        instagram:
+          type: string
+          format: uri
+          example: "https://instagram.com/sportech"
+        youtube:
+          type: string
+          format: uri
+          example: "https://youtube.com/sportech"
+
+    ContactMessageRequest:
+      type: object
+      required:
+        - name
+        - email
+        - message
+      properties:
+        name:
+          type: string
+          description: Name of the person sending the message
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: Email address for response
+          example: "user@example.com"
+        message:
+          type: string
+          description: The message content
+          example: "I would like to inquire about your services."
+
     Policy:
       type: object
       description: Policy document from the database

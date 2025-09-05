@@ -12,7 +12,8 @@ const contactRoutes = require("./routes/contactRoutes");
 const policyRoutes = require("./routes/policiesRoutes");
 
 const app = express();
-app.use(express.json());
+// Increase JSON body parser limit to 10MB
+app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
 
@@ -27,6 +28,8 @@ app.use("/api/team", teamRoutes);
 app.use("/api/faqs", faqRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/policies", policyRoutes);
+app.use("/api/contact", require("./routes/contactMessageRoutes"));
+app.use("/api/feedback", require("./routes/feedbackRoutes"));
 
 // Start server
 const PORT = process.env.PORT || 4000;

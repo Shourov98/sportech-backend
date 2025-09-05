@@ -5,10 +5,9 @@ const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Public read
-router.get("/", ctrl.get);
-
-// Admin-only update
-router.put("/", auth, ctrl.update);
+router.get("/", ctrl.get); // public
+router.post("/", auth, ctrl.create); // admin: create once
+router.put("/", auth, ctrl.update); // admin: update
+router.post("/send-message", ctrl.sendMessage); // public contact form
 
 module.exports = router;

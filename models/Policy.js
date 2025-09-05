@@ -1,6 +1,12 @@
-const mongoose6 = require("mongoose");
+// models/Policy.js
+const mongoose = require("mongoose");
 
-const PolicySchema = new mongoose6.Schema(
+const SectionSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: [{ type: String, required: true }],
+});
+
+const PolicySchema = new mongoose.Schema(
   {
     slug: {
       type: String,
@@ -8,12 +14,12 @@ const PolicySchema = new mongoose6.Schema(
       unique: true,
       trim: true,
       lowercase: true,
-    }, // e.g. privacy-policy
+    }, // e.g. "terms-and-conditions"
     title: { type: String, required: true },
     subtitle: String,
-    content: { type: String, required: true }, // markdown or rich text JSON as string
+    sections: [SectionSchema], // array of sections
   },
   { timestamps: { createdAt: false, updatedAt: "updatedAt" } }
 );
 
-module.exports = mongoose6.model("Policy", PolicySchema);
+module.exports = mongoose.model("Policy", PolicySchema);

@@ -1,9 +1,11 @@
-const mongoose5 = require("mongoose");
+// models/ContactInfo.js
+const mongoose = require("mongoose");
 
 // Singleton document with numeric _id = 1
-const ContactInfoSchema = new mongoose5.Schema(
+const ContactInfoSchema = new mongoose.Schema(
   {
-    address: String,
+    _id: { type: Number, default: 1 },
+    location: String,
     email: String,
     phone: String,
     facebook: String,
@@ -14,4 +16,4 @@ const ContactInfoSchema = new mongoose5.Schema(
   { timestamps: { createdAt: false, updatedAt: "updatedAt" } }
 );
 
-module.exports = mongoose5.model("ContactInfo", ContactInfoSchema);
+module.exports = mongoose.model("ContactInfo", ContactInfoSchema);
