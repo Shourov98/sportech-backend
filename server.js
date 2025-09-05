@@ -15,7 +15,37 @@ const app = express();
 // Increase JSON body parser limit to 10MB
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
-app.use(cors({ origin: true, credentials: true }));
+// CORS configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, postman)
+    if (!origin) return callback(null, true);
+    
+    // You can add specific origins here if needed in the future
+    // const allowedOrigins = [
+    //   'http://localhost:3000',
+    //   'https://yourfrontenddomain.com'
+    // ];
+    // if (allowedOrigins.includes(origin)) {
+    //   return callback(null, true);
+    // }
+    
+    // For now, allow all origins in development
+    // In production, you should restrict this to your frontend domains
+    return callback(null, true);
+  },
+  credentials: true, // Enable credentials (cookies, authorization headers)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Total-Count'],
+  maxAge: 600, // How long the results of a preflight request can be cached (in seconds)
+};
+
+// Apply CORS with the above options
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Connect DB
 connectDB();
