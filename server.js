@@ -30,33 +30,26 @@ const app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// CORS (dev: allow all; prod: whitelist via env CORS_ORIGINS="https://a.com,https://b.com")
-const isProd = process.env.NODE_ENV === "production";
-const allowedOrigins = (process.env.CORS_ORIGINS || "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // curl/postman/native apps
-      if (!isProd) return cb(null, true); // allow all in dev
-      return cb(null, allowedOrigins.includes(origin)); // strict in prod
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-    ],
-    exposedHeaders: ["Content-Range", "X-Total-Count"],
-    maxAge: 600,
-  })
-);
+/* -------- Permissive CORS (allow all origins) -------- */
+const corsOptions = {
+  origin: true,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
+  exposedHeaders: ["Content-Range", "X-Total-Count"],
+  maxAge: 600,
+  optionsSuccessStatus: 204,
+};
 
-// NOTE: Removed the problematic `app.options('*', ...)` line
+app.use(cors(corsOptions));
+// EITHER remove the next line, OR keep this regex version:
+app.options(/.*/, cors(corsOptions)); // <- OK (regex literal)
+// handle preflight for all routes
 
 /* -------- DB connect -------- */
 connectDB();
@@ -81,6 +74,7 @@ app.use(
     customSiteTitle: "Sportech Admin API Docs",
   })
 );
+
 // optional: quick health check
 app.get("/healthz", (req, res) => res.json({ ok: true }));
 
