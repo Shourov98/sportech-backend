@@ -1,6 +1,6 @@
 // controllers/contactController.js
 const ContactInfo = require("../models/ContactInfo");
-const { sendMail } = require("../utils/mailer");
+const sendMail = require("../utils/mailer");
 
 // GET /api/contact  (public)
 exports.get = async (_req, res) => {
@@ -52,27 +52,35 @@ exports.update = async (req, res) => {
 };
 
 // POST /api/contact/send-message  (public) — contact form
+// controllers/contactController.js
+// <-- default import
+
 exports.sendMessage = async (req, res) => {
   try {
-    const { name, email, message } = req.body;
+    const { firstName, lastName, email, message, phone } = req.body;
+    const name = `${firstName} ${lastName}`;
+
     if (!name || !email || !message) {
       return res
         .status(400)
         .json({ error: "name, email, and message are required" });
     }
+
     const subject = `New contact message from ${name}`;
     const html = `
       <h2>New Contact Form Submission</h2>
       <p><strong>Name:</strong> ${name}</p>
       <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Phone:</strong> ${phone || "N/A"}</p>
       <p><strong>Message:</strong></p>
       <p>${message}</p>
     `;
-    await sendMail({
-      to: process.env.ADMIN_EMAIL || process.env.SMTP_USER,
+
+    await sendMail(
+      process.env.ADMIN_EMAIL || process.env.SMTP_USER,
       subject,
-      html,
-    });
+      html
+    );
     res.json({ success: true, message: "Message sent successfully!" });
   } catch (err) {
     console.error("Mail send failed:", err?.response || err?.message || err);
