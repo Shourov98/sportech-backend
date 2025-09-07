@@ -15,6 +15,7 @@ const serviceRoutes = require("./routes/servicesRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const faqRoutes = require("./routes/faqsRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const contactMessageRoutes = require("./routes/contactMessageRoutes");
 const policyRoutes = require("./routes/policiesRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 
@@ -61,6 +62,7 @@ app.use("/api/services", serviceRoutes);
 app.use("/api/team", teamRoutes);
 app.use("/api/faqs", faqRoutes);
 app.use("/api/contact", contactRoutes); // includes GET/POST/PUT and send-message
+app.use("/api/contact-message", contactMessageRoutes);
 app.use("/api/policies", policyRoutes);
 app.use("/api/feedback", feedbackRoutes);
 

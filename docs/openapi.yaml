@@ -535,8 +535,7 @@ paths:
                 $ref: "#/components/schemas/ContactInfo"
         "400":
           description: Invalid input
-
-  /contact/send-message:
+  /contact-message/send-message:
     post:
       tags:
         - Contact
@@ -549,7 +548,7 @@ paths:
             schema:
               $ref: "#/components/schemas/ContactMessageRequest"
       responses:
-        "200":
+        '200':
           description: Message sent successfully
           content:
             application/json:
@@ -562,8 +561,8 @@ paths:
                   message:
                     type: string
                     example: "Message sent successfully!"
-        "400":
-          description: Missing required fields (name, email, message)
+        '400':
+          description: Missing required fields
           content:
             application/json:
               schema:
@@ -571,9 +570,9 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "name, email, and message are required"
-        "500":
-          description: Failed to send message
+                    example: "Missing required fields"
+        '500':
+          description: Internal server error
           content:
             application/json:
               schema:
@@ -582,7 +581,6 @@ paths:
                   error:
                     type: string
                     example: "Failed to send message"
-
   /team:
     get:
       tags:
@@ -1380,29 +1378,16 @@ components:
       properties:
         _id:
           type: string
-          format: uuid
-          readOnly: true
-        slug:
-          type: string
-          description: URL-friendly identifier (lowercase, hyphen-separated)
-          example: "privacy-policy"
         title:
           type: string
-          description: Title of the policy
-          example: "Privacy Policy"
-        subtitle:
+        content:
           type: string
-          description: Optional subtitle for the policy
-          example: "Last updated on January 1, 2023"
-        sections:
-          type: array
-          description: Array of policy sections
-          items:
-            $ref: "#/components/schemas/PolicySection"
+        createdAt:
+          type: string
+          format: date-time
         updatedAt:
           type: string
           format: date-time
-          readOnly: true
     ContactInfo:
       type: object
       description: Contact information for the organization
@@ -1502,13 +1487,26 @@ components:
       properties:
         _id:
           type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          description: URL-friendly identifier (lowercase, hyphen-separated)
+          example: "privacy-policy"
         title:
           type: string
-        content:
+          description: Title of the policy
+          example: "Privacy Policy"
+        subtitle:
           type: string
-        createdAt:
-          type: string
-          format: date-time
+          description: Optional subtitle for the policy
+          example: "Last updated on January 1, 2023"
+        sections:
+          type: array
+          description: Array of policy sections
+          items:
+            $ref: "#/components/schemas/PolicySection"
         updatedAt:
           type: string
           format: date-time
+          readOnly: true

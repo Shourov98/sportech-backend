@@ -52,7 +52,7 @@ exports.update = async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 };
-
++0;
 exports.remove = async (req, res) => {
   const del = await TeamMember.findByIdAndDelete(req.params.id);
   if (!del) return res.status(404).json({ error: "Not found" });
