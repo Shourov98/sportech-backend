@@ -98,25 +98,32 @@ exports.update = async (req, res) => {
     const existing = await Partner.findById(req.params.id);
     if (!existing) return res.status(404).json({ error: "Not found" });
 
-    const data = mapBody(req.body);
+    const mapped = mapBody(req.body);
 
-    // if name changes, regenerate unique slug
-    if (
-      typeof data.name === "string" &&
-      data.name.trim() &&
-      data.name !== existing.name
-    ) {
-      data.slug = await uniqueSlugFromName(data.name, existing._id);
+    // determine if name actually changed
+    const shouldRename =
+      typeof mapped.name === "string" &&
+      mapped.name.trim() &&
+      mapped.name !== existing.name;
+
+    // build next update payload
+    const next = { ...mapped };
+
+    // if name changed, generate a new unique slug
+    if (shouldRename) {
+      next.slug = await uniqueSlugFromName(mapped.name, existing._id);
     }
 
-    // do not let client change order/published directly here
-    delete data.order;
-    // NOTE: don't delete slug if we intentionally set it above
-    // (ensure we only remove when not changed)
-    if (!("slug" in data)) delete data.slug;
-    delete data.published;
+    // lock server-controlled fields
+    delete next.order;
+    delete next.published;
 
-    const updated = await Partner.findByIdAndUpdate(existing._id, data, {
+    // prevent accidental slug overwrite unless we set it above
+    if (!shouldRename) {
+      delete next.slug;
+    }
+
+    const updated = await Partner.findByIdAndUpdate(existing._id, next, {
       new: true,
       runValidators: true,
     });
