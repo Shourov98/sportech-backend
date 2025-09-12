@@ -1,4 +1,3 @@
-// models/Partner.js
 const mongoose = require("mongoose");
 
 const PartnerSchema = new mongoose.Schema(
@@ -7,9 +6,16 @@ const PartnerSchema = new mongoose.Schema(
     shortDesc: { type: String, trim: true }, // maps from short_description
     description: { type: String, trim: true },
     website: { type: String, trim: true },
+
     googlePlay: { type: String, trim: true }, // maps from googleplay
     appGallery: { type: String, trim: true }, // maps from appgallary/appgallery
     logo: { type: String, trim: true }, // Cloudinary URL
+
+    // NEW FIELDS
+    specialization: { type: String, trim: true, default: "" },
+    region: { type: String, trim: true, default: "" },
+    language: { type: String, trim: true, default: "" },
+
     slug: {
       type: String,
       required: true,

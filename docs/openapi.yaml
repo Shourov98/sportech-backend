@@ -1114,6 +1114,15 @@ components:
           type: string
         logo:
           type: string
+        specialization:
+          type: string
+          description: Partner's area of specialization
+        region:
+          type: string
+          description: Partner's operating region
+        language:
+          type: string
+          description: Partner's primary language
     Partner:
       type: object
       description: Partner document from the database
@@ -1134,6 +1143,15 @@ components:
           type: string
         logo:
           type: string
+        specialization:
+          type: string
+          description: Partner's area of specialization
+        region:
+          type: string
+          description: Partner's operating region
+        language:
+          type: string
+          description: Partner's primary language
         slug:
           type: string
         published:

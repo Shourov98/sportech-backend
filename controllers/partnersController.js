@@ -1,18 +1,24 @@
-// controllers/partnersController.js
 const Partner = require("../models/Partner");
 const slugify = require("../utils/slugify");
 
 /** map allowed client fields -> model fields */
 function mapBody(body = {}) {
+  // accept both snakeCase and camelCase a bit defensively
   return {
     name: body.name, // required
-    shortDesc: body.short_description, // maps to shortDesc
+    shortDesc: body.short_description ?? body.shortDesc,
     description: body.description,
     website: body.website,
-    googlePlay: body.googleplay, // maps to googlePlay
-    appGallery: body.appgallary ?? body.appgallery, // tolerate both spellings
+
+    googlePlay: body.googleplay ?? body.googlePlay,
+    appGallery: body.appgallary ?? body.appgallery ?? body.appGallery,
     logo: body.logo,
-    // slug, order, published are controlled by server
+
+    // NEW: strings
+    specialization: body.specialization ?? body.specialisation ?? "",
+    region: body.region ?? "",
+    language: body.language ?? "",
+    // slug, order, published are server-controlled
   };
 }
 
@@ -39,8 +45,17 @@ exports.list = async (req, res) => {
   const { published, q } = req.query;
   const where = {};
   if (published !== undefined) where.published = published === "true";
-  if (q)
-    where.$or = [{ name: new RegExp(q, "i") }, { slug: new RegExp(q, "i") }];
+  if (q) {
+    const rx = new RegExp(q, "i");
+    where.$or = [
+      { name: rx },
+      { slug: rx },
+      // allow searching by new fields too
+      { specialization: rx },
+      { region: rx },
+      { language: rx },
+    ];
+  }
 
   const items = await Partner.find(where).sort({ order: 1, createdAt: -1 });
   res.json(items);
@@ -94,13 +109,16 @@ exports.update = async (req, res) => {
       data.slug = await uniqueSlugFromName(data.name, existing._id);
     }
 
-    // do not let client change order/published here (unless you add dedicated endpoints)
+    // do not let client change order/published directly here
     delete data.order;
+    // NOTE: don't delete slug if we intentionally set it above
+    // (ensure we only remove when not changed)
+    if (!("slug" in data)) delete data.slug;
     delete data.published;
-    delete data.slug; // will be re-added above only when name changed
 
     const updated = await Partner.findByIdAndUpdate(existing._id, data, {
       new: true,
+      runValidators: true,
     });
     res.json(updated);
   } catch (e) {
